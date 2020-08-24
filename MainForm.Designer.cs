@@ -37,48 +37,47 @@
             this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.notifyMenuStrip.SuspendLayout();
             this.SuspendLayout();
-            // 
+            //
             // moveTimer
-            // 
+            //
             this.moveTimer.Interval = 60000;
             this.moveTimer.Tick += new System.EventHandler(this.OnMoveTimerTick);
-            // 
+            //
             // notifyIcon
-            // 
+            //
             this.notifyIcon.ContextMenuStrip = this.notifyMenuStrip;
             this.notifyIcon.Text = "Insomnia";
             this.notifyIcon.Visible = true;
-            // 
+            //
             // notifyMenuStrip
-            // 
+            //
             this.notifyMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.enableMenuItem,
             this.aggressiveMenuItem,
             this.exitMenuItem});
             this.notifyMenuStrip.Name = "notifyMenuStrip";
-            // 
+            //
             // enableMenuItem
-            // 
+            //
             this.enableMenuItem.CheckOnClick = true;
             this.enableMenuItem.Name = "enableMenuItem";
             this.enableMenuItem.Text = "Enabled";
             this.enableMenuItem.CheckedChanged += new System.EventHandler(this.OnEnableMenuItemCheckedChanged);
-            // 
+            //
             // aggressiveMenuItem
-            // 
+            //
             this.aggressiveMenuItem.CheckOnClick = true;
             this.aggressiveMenuItem.Name = "aggressiveMenuItem";
             this.aggressiveMenuItem.Text = "Aggressive Mode";
-            this.aggressiveMenuItem.CheckedChanged += new System.EventHandler(this.OnAggressiveMenuItemCheckedChanged);
-            // 
+            //
             // exitMenuItem
-            // 
+            //
             this.exitMenuItem.Name = "exitMenuItem";
             this.exitMenuItem.Text = "Exit";
             this.exitMenuItem.Click += new System.EventHandler(this.OnExitMenuItemClick);
-            // 
+            //
             // MainForm
-            // 
+            //
             this.Name = "MainForm";
             this.ShowInTaskbar = false;
             this.notifyMenuStrip.ResumeLayout(false);

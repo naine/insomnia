@@ -3,6 +3,7 @@
 // for full license information.
 
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -10,6 +11,9 @@ namespace Insomnia
 {
     public partial class MainForm : Form
     {
+        private static readonly string configPath
+            = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Insomnia.cfg");
+
         public MainForm()
         {
             InitializeComponent();
@@ -21,7 +25,33 @@ namespace Insomnia
             // TODO make a more unique icon.
             notifyIcon.Icon = Icon;
 
-            // TODO read config and restore aggressive setting
+            string[]? cfg = null;
+            try
+            {
+                cfg = File.ReadAllLines(configPath);
+            }
+            catch (Exception) { }
+
+            if (cfg != null)
+            {
+                foreach (string line in cfg)
+                {
+                    string[] parts = line.Split('=', 2);
+                    if (parts.Length != 2)
+                    {
+                        continue;
+                    }
+                    switch (parts[0])
+                    {
+                    case "aggressive":
+                        if (bool.TryParse(parts[1], out bool aggressive))
+                        {
+                            aggressiveMenuItem.Checked = aggressive;
+                        }
+                        break;
+                    }
+                }
+            }
         }
 
         protected override void SetVisibleCore(bool value)
@@ -33,14 +63,18 @@ namespace Insomnia
             base.SetVisibleCore(false);
         }
 
-        private void OnExitMenuItemClick(object? sender, EventArgs e)
+        private async void OnExitMenuItemClick(object? sender, EventArgs e)
         {
+            string[] cfg = new[]
+            {
+                $"aggressive={aggressiveMenuItem.Checked}",
+            };
+            try
+            {
+                await File.WriteAllLinesAsync(configPath, cfg);
+            }
+            catch (Exception) { }
             Application.Exit();
-        }
-
-        private void OnAggressiveMenuItemCheckedChanged(object? sender, EventArgs e)
-        {
-            // TODO save to config somewhere
         }
 
         private void OnEnableMenuItemCheckedChanged(object? sender, EventArgs e)
