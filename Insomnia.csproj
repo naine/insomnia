@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <Authors>Nathan Williams</Authors>
+    <Copyright>Copyright © Nathan Williams 2020</Copyright>
+    <Description>Small application to prevent idle detection.</Description>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+</Project>
