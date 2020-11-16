@@ -89,7 +89,7 @@ namespace Insomnia
             var input = new INPUT
             {
                 type = 0, // INPUT_MOUSE
-                mi = new MOUSEINPUT
+                mi = new()
                 {
                     dwFlags = 1, // MOUSEEVENTF_MOVE
                 }
@@ -99,10 +99,8 @@ namespace Insomnia
                 input.mi.dx = direction ? 1 : -1;
                 direction = !direction;
             }
-            SendInput(1, &input, sizeof(INPUT));
+            _ = SendInput(1, &input, sizeof(INPUT));
         }
-
-#pragma warning disable IDE1006 // Naming Styles
 
         [DllImport("user32.dll", ExactSpelling = true)]
         private static unsafe extern uint SendInput(uint nInputs, INPUT* pInputs, int cbSize);
