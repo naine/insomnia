@@ -48,6 +48,7 @@
             this.notifyIcon.ContextMenuStrip = this.notifyMenuStrip;
             this.notifyIcon.Text = "Insomnia";
             this.notifyIcon.Visible = true;
+            this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.OnNotifyIconDoubleClick);
             //
             // notifyMenuStrip
             //
