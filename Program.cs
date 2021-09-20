@@ -3,7 +3,10 @@
 // for full license information.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+
+[module: SkipLocalsInit]
 
 namespace Insomnia
 {
@@ -14,7 +17,8 @@ namespace Insomnia
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            using var form = new MainForm();
+            Application.Run(form);
         }
     }
 }

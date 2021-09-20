@@ -36,7 +36,7 @@ namespace Insomnia
             }
             catch (Exception) { }
 
-            if (cfg != null)
+            if (cfg is not null)
             {
                 foreach (string line in cfg)
                 {
@@ -60,10 +60,10 @@ namespace Insomnia
 
         private static Icon InvertIcon(Icon icon)
         {
-            var src = icon.ToBitmap();
+            using var src = icon.ToBitmap();
             int width = src.Width;
             int height = src.Height;
-            var dst = new Bitmap(width, height, src.PixelFormat);
+            using var dst = new Bitmap(width, height, src.PixelFormat);
             double midX = (width - 1) / 2.0;
             double midY = (height - 1) / 2.0;
             for (int x = 0; x < width; ++x)
@@ -216,7 +216,7 @@ namespace Insomnia
             notifyIcon.Icon = (moveTimer.Enabled = enableMenuItem.Checked) ? onIcon : offIcon;
         }
 
-        private bool direction = false;
+        private bool direction;
 
         private unsafe void OnMoveTimerTick(object? sender, EventArgs e)
         {
@@ -237,6 +237,7 @@ namespace Insomnia
         }
 
         [DllImport("user32.dll", ExactSpelling = true)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         private static unsafe extern uint SendInput(uint nInputs, INPUT* pInputs, int cbSize);
 
         [StructLayout(LayoutKind.Sequential)]
