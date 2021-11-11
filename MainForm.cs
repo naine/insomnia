@@ -40,19 +40,18 @@ namespace Insomnia
             {
                 foreach (string line in cfg)
                 {
-                    string[] parts = line.Split('=', 2);
-                    if (parts.Length != 2)
+                    int eqPos = line.IndexOf('=');
+                    if (eqPos < 0 || eqPos == line.Length - 1) continue;
+                    var value = line.AsSpan(eqPos + 1);
+                    if (value.Contains('=')) continue;
+
+                    var key = line.AsSpan(0, eqPos);
+                    if (key.SequenceEqual("aggressive"))
                     {
-                        continue;
-                    }
-                    switch (parts[0])
-                    {
-                    case "aggressive":
-                        if (bool.TryParse(parts[1], out bool aggressive))
+                        if (bool.TryParse(value, out bool aggressive))
                         {
                             aggressiveMenuItem.Checked = aggressive;
                         }
-                        break;
                     }
                 }
             }
@@ -150,7 +149,7 @@ namespace Insomnia
                 double saturation = 1 - (min / (double)max);
                 double hueDistanceFromPrimary = 60 * (mid - min) / (double)(max - min);
                 double hue;
-                if (hueSextant % 2 == 0)
+                if ((uint)hueSextant % 2 == 0)
                 {
                     hue = (hueSextant * 60) + hueDistanceFromPrimary;
                 }
@@ -180,7 +179,7 @@ namespace Insomnia
                 => min + ((max - min) * hueDistanceFromPrimary / 60);
 
             static byte Round(double value)
-                => (byte)Math.Max(0, Math.Min(255, (int)Math.Round(value)));
+                => (byte)Math.Clamp((int)Math.Round(value), byte.MinValue, byte.MaxValue);
         }
 
         protected override void SetVisibleCore(bool value)
@@ -220,13 +219,11 @@ namespace Insomnia
 
         private unsafe void OnMoveTimerTick(object? sender, EventArgs e)
         {
-            var input = new INPUT
+            INPUT input;
+            input.type = 0; // INPUT_MOUSE
+            input.mi = new()
             {
-                type = 0, // INPUT_MOUSE
-                mi = new()
-                {
-                    dwFlags = 1, // MOUSEEVENTF_MOVE
-                }
+                dwFlags = 1, // MOUSEEVENTF_MOVE
             };
             if (aggressiveMenuItem.Checked)
             {
