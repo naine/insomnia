@@ -27,7 +27,8 @@ namespace Insomnia
             // Form.Icon getter returns a default icon from the WinForms assembly
             // when no icon is set. Use this as a placeholder for the tray for now.
             // TODO make a more unique icon.
-            notifyIcon.Icon = onIcon = InvertIcon(offIcon = Icon);
+            offIcon = Icon ?? throw new Exception("Error: Missing WinForms default icon");
+            notifyIcon.Icon = onIcon = InvertIcon(offIcon);
 
             string[]? cfg = null;
             try
@@ -41,17 +42,18 @@ namespace Insomnia
                 foreach (string line in cfg)
                 {
                     int eqPos = line.IndexOf('=');
-                    if (eqPos < 0 || eqPos == line.Length - 1) continue;
+                    if (eqPos < 1 || eqPos == line.Length - 1) continue;
                     var value = line.AsSpan(eqPos + 1);
                     if (value.Contains('=')) continue;
 
-                    var key = line.AsSpan(0, eqPos);
-                    if (key.SequenceEqual("aggressive"))
+                    switch (line.AsSpan(0, eqPos))
                     {
+                    case "aggressive":
                         if (bool.TryParse(value, out bool aggressive))
                         {
                             aggressiveMenuItem.Checked = aggressive;
                         }
+                        break;
                     }
                 }
             }
@@ -233,9 +235,9 @@ namespace Insomnia
             _ = SendInput(1, &input, sizeof(INPUT));
         }
 
-        [DllImport("user32.dll", ExactSpelling = true)]
+        [LibraryImport("user32.dll")]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-        private static unsafe extern uint SendInput(uint nInputs, INPUT* pInputs, int cbSize);
+        private static unsafe partial uint SendInput(uint nInputs, INPUT* pInputs, int cbSize);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct INPUT

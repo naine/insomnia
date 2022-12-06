@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 [module: SkipLocalsInit]
+[assembly: DisableRuntimeMarshalling]
 
 namespace Insomnia
 {

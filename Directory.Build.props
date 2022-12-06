@@ -2,8 +2,11 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnableSingleFileAnalysis>true</EnableSingleFileAnalysis>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 </Project>
