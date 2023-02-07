@@ -7,6 +7,7 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace Insomnia
 {
@@ -57,6 +58,8 @@ namespace Insomnia
                     }
                 }
             }
+
+            SystemEvents.SessionSwitch += OnSessionSwitch;
         }
 
         private static Icon InvertIcon(Icon icon)
@@ -218,9 +221,14 @@ namespace Insomnia
         }
 
         private bool direction;
+        private bool sessionActive = true;
 
         private unsafe void OnMoveTimerTick(object? sender, EventArgs e)
         {
+            if (!sessionActive)
+            {
+                return;
+            }
             INPUT input;
             input.type = 0; // INPUT_MOUSE
             input.mi = new()
@@ -233,6 +241,19 @@ namespace Insomnia
                 direction = !direction;
             }
             _ = SendInput(1, &input, sizeof(INPUT));
+        }
+
+        private void OnSessionSwitch(object sender, SessionSwitchEventArgs e)
+        {
+            switch (e.Reason)
+            {
+            case SessionSwitchReason.SessionLock:
+                sessionActive = false;
+                break;
+            case SessionSwitchReason.SessionUnlock:
+                sessionActive = true;
+                break;
+            }
         }
 
         [LibraryImport("user32.dll")]
