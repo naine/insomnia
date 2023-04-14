@@ -5,12 +5,22 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RollForward>Major</RollForward>
     <PublishRelease>true</PublishRelease>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishSingleFile>true</PublishSingleFile>
-    <PublishSelfContained>false</PublishSelfContained>
     <Authors>Nathan Williams</Authors>
     <Copyright>Copyright © Nathan Williams 2020</Copyright>
     <Description>Small application to prevent idle detection.</Description>
     <Version>1.0.0</Version>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(UseNativeAot)' != 'true'">
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishSelfContained>false</PublishSelfContained>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UseNativeAot)' == 'true'">
+    <PublishAot>true</PublishAot>
+    <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
+    <DefineConstants>USE_NATIVE_AOT;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UseNativeAot)' == 'true'">
+    <PackageReference Include="WinFormsComInterop" Version="0.4.3" />
+  </ItemGroup>
 </Project>
