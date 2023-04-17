@@ -8,5 +8,6 @@
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+    <NoWarn>NETSDK1190;$(NoWarn)</NoWarn>
   </PropertyGroup>
 </Project>
