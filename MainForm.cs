@@ -198,10 +198,9 @@ namespace Insomnia
 
         private async void OnExitMenuItemClick(object? sender, EventArgs e)
         {
-            string[] cfg = new[]
-            {
+            string[] cfg = [
                 $"aggressive={aggressiveMenuItem.Checked}",
-            };
+            ];
             try
             {
                 await File.WriteAllLinesAsync(configPath, cfg);

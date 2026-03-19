@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <RollForward>Major</RollForward>
     <PublishRelease>true</PublishRelease>
@@ -21,6 +21,6 @@
     <DefineConstants>USE_NATIVE_AOT;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(UseNativeAot)' == 'true'">
-    <PackageReference Include="WinFormsComInterop" Version="0.4.3" />
+    <PackageReference Include="WinFormsComInterop" Version="0.5.0" />
   </ItemGroup>
 </Project>
