@@ -4,7 +4,9 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -62,106 +64,88 @@ namespace Insomnia
             SystemEvents.SessionSwitch += OnSessionSwitch;
         }
 
-        private static Icon InvertIcon(Icon icon)
+        private static unsafe Icon InvertIcon(Icon icon)
         {
-            using var src = icon.ToBitmap();
-            int width = src.Width;
-            int height = src.Height;
-            using var dst = new Bitmap(width, height, src.PixelFormat);
+            const PixelFormat fmt = PixelFormat.Format32bppArgb;
+            using var bmp = icon.ToBitmap();
+            if (bmp.PixelFormat != fmt)
+            {
+                bmp.ConvertFormat(fmt);
+            }
+            int width = bmp.Width;
+            int height = bmp.Height;
+            var bmpd = bmp.LockBits(new(0, 0, width, height), ImageLockMode.ReadWrite, fmt);
+            byte* ptr = (byte*)bmpd.Scan0;
             double midX = (width - 1) / 2.0;
             double midY = (height - 1) / 2.0;
-            for (int x = 0; x < width; ++x)
+            for (int y = 0; y < height; ++y)
             {
-                double xDistSquared = (x - midX) / midX;
-                xDistSquared *= xDistSquared;
-                for (int y = 0; y < height; ++y)
+                double yDistSquared = (y - midY) / midY;
+                yDistSquared *= yDistSquared;
+                for (int x = 0; x < width; ++x)
                 {
-                    double yDist = (y - midY) / midY;
-                    var pxl = src.GetPixel(x, y);
-                    var hsv = RGB2HSV(pxl);
-                    // Invert V so only the brightness changes and not the colour.
-                    double invertedV = 1 - hsv.V;
+                    var pxl = new ArgbPixel(Unsafe.ReadUnaligned<uint>(ptr + (x * sizeof(uint))));
+                    // Convert to HSV so we can invert only the brightness and not the colour.
+                    var hsv = RGB2HSV(pxl.R, pxl.G, pxl.B);
                     double origA = pxl.A / 255.0;
                     // Add a white glow behind the icon.
-                    double glowTrans = Math.Pow(Math.Min(1, Math.Sqrt(xDistSquared + (yDist * yDist))), 4);
-                    int resultA = (int)Math.Round(255 * (1 - ((1 - origA) * glowTrans)));
-                    double resultV = (glowTrans == 1 && pxl.A == 0) ? 1
-                        : (1 - ((1 - invertedV) * origA / (1 + ((origA - 1) * glowTrans))));
+                    double xDist = (x - midX) / midX;
+                    double glowTrans = Math.Pow(Math.Min(1, Math.Sqrt((xDist * xDist) + yDistSquared)), 4);
+                    byte resultA = (byte)Math.Round(255 * (1 - ((1 - origA) * glowTrans)));
+                    double resultV = pxl.A == 0 ? 1
+                        : (1 - (hsv.V * origA / (1 + ((origA - 1) * glowTrans))));
                     var rgb = HSV2RGB(hsv.H, hsv.S, resultV);
-                    dst.SetPixel(x, y, Color.FromArgb(resultA, rgb.R, rgb.G, rgb.B));
+                    Unsafe.WriteUnaligned<uint>(ptr + (x * sizeof(uint)), new ArgbPixel(resultA, rgb.R, rgb.G, rgb.B));
                 }
+                ptr += bmpd.Stride;
             }
-            return Icon.FromHandle(dst.GetHicon());
+            bmp.UnlockBits(bmpd);
+            return Icon.FromHandle(bmp.GetHicon());
 
-            static (double H, double S, double V) RGB2HSV(Color pxl)
+            static (double H, double S, double V) RGB2HSV(uint r, uint g, uint b)
             {
-                if (pxl.R == pxl.G && pxl.G == pxl.B)
+                if (r == g && g == b)
                 {
                     // Special-cased to prevent division by zero.
-                    return (0.0, 0.0, pxl.R / 255.0);
+                    return (0.0, 0.0, r / 255.0);
                 }
-                byte max, mid, min;
-                int hueSextant;
-                if (pxl.R >= pxl.G)
+                uint max, mid, min, hueSextant;
+                if (r >= g)
                 {
-                    if (pxl.G >= pxl.B)
+                    if (g >= b)
                     {
-                        max = pxl.R;
-                        mid = pxl.G;
-                        min = pxl.B;
-                        hueSextant = 0;
+                        (max, mid, min, hueSextant) = (r, g, b, 0);
                     }
-                    else if (pxl.B >= pxl.R)
+                    else if (b >= r)
                     {
-                        max = pxl.B;
-                        mid = pxl.R;
-                        min = pxl.G;
-                        hueSextant = 4;
+                        (max, mid, min, hueSextant) = (b, r, g, 4);
                     }
                     else
                     {
-                        max = pxl.R;
-                        mid = pxl.B;
-                        min = pxl.G;
-                        hueSextant = 5;
+                        (max, mid, min, hueSextant) = (r, b, g, 5);
                     }
                 }
                 else
                 {
-                    if (pxl.R >= pxl.B)
+                    if (r >= b)
                     {
-                        max = pxl.G;
-                        mid = pxl.R;
-                        min = pxl.B;
-                        hueSextant = 1;
+                        (max, mid, min, hueSextant) = (g, r, b, 1);
                     }
-                    else if (pxl.B >= pxl.G)
+                    else if (b >= g)
                     {
-                        max = pxl.B;
-                        mid = pxl.G;
-                        min = pxl.R;
-                        hueSextant = 3;
+                        (max, mid, min, hueSextant) = (b, g, r, 3);
                     }
                     else
                     {
-                        max = pxl.G;
-                        mid = pxl.B;
-                        min = pxl.R;
-                        hueSextant = 2;
+                        (max, mid, min, hueSextant) = (g, b, r, 2);
                     }
                 }
                 double value = max / 255.0;
                 double saturation = 1 - (min / (double)max);
                 double hueDistanceFromPrimary = 60 * (mid - min) / (double)(max - min);
-                double hue;
-                if ((uint)hueSextant % 2 == 0)
-                {
-                    hue = (hueSextant * 60) + hueDistanceFromPrimary;
-                }
-                else
-                {
-                    hue = ((hueSextant + 1) * 60) - hueDistanceFromPrimary;
-                }
+                double hue = hueSextant % 2 == 0
+                    ? (hueSextant * 60) + hueDistanceFromPrimary
+                    : ((hueSextant + 1) * 60) - hueDistanceFromPrimary;
                 return (hue, saturation, value);
             }
 
@@ -171,17 +155,17 @@ namespace Insomnia
                 double min = max * (1 - s);
                 return h switch
                 {
-                    < 60    => (Round(max), Round(MidRgbValue(max, min, h)), Round(min)),
-                    < 120   => (Round(MidRgbValue(max, min, 120 - h)), Round(max), Round(min)),
-                    < 180   => (Round(min), Round(max), Round(MidRgbValue(max, min, h - 120))),
-                    < 240   => (Round(min), Round(MidRgbValue(max, min, 240 - h)), Round(max)),
-                    < 300   => (Round(MidRgbValue(max, min, h - 240)), Round(min), Round(max)),
-                    _       => (Round(max), Round(min), Round(MidRgbValue(max, min, 360 - h)))
+                    < 60    => (Round(max), MidRgbValue(max, min, h), Round(min)),
+                    < 120   => (MidRgbValue(max, min, 120 - h), Round(max), Round(min)),
+                    < 180   => (Round(min), Round(max), MidRgbValue(max, min, h - 120)),
+                    < 240   => (Round(min), MidRgbValue(max, min, 240 - h), Round(max)),
+                    < 300   => (MidRgbValue(max, min, h - 240), Round(min), Round(max)),
+                    _       => (Round(max), Round(min), MidRgbValue(max, min, 360 - h)),
                 };
             }
 
-            static double MidRgbValue(double max, double min, double hueDistanceFromPrimary)
-                => min + ((max - min) * hueDistanceFromPrimary / 60);
+            static byte MidRgbValue(double max, double min, double hueDistanceFromPrimary)
+                => Round(min + ((max - min) * hueDistanceFromPrimary / 60));
 
             static byte Round(double value)
                 => (byte)Math.Clamp((int)Math.Round(value), byte.MinValue, byte.MaxValue);
