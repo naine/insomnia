@@ -3,34 +3,71 @@
 // for full license information.
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
 namespace Insomnia
 {
-    public partial class MainForm : Form
+    public sealed partial class InsomniaApp : IDisposable
     {
         private static readonly string configPath
             = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Insomnia.cfg");
 
+        private readonly Container components = new();
         private readonly Icon offIcon;
         private readonly Icon onIcon;
+        private readonly System.Windows.Forms.Timer moveTimer;
+        private readonly NotifyIcon notifyIcon;
+        private readonly ToolStripMenuItem enableMenuItem;
+        private readonly ToolStripMenuItem aggressiveMenuItem;
 
-        public MainForm()
+        public InsomniaApp()
         {
-            InitializeComponent();
-            Hide();
-            enableMenuItem.Checked = true;
+            moveTimer = new(components)
+            {
+                Interval = 60000,
+            };
+            moveTimer.Tick += OnMoveTimerTick;
+            var menu = new ContextMenuStrip(components);
+            menu.SuspendLayout();
+            menu.Items.AddRange(
+                enableMenuItem = new("Enabled")
+                {
+                    CheckOnClick = true,
+                    Checked = true,
+                },
+                aggressiveMenuItem = new("Aggressive Mode")
+                {
+                    CheckOnClick = true,
+                },
+                new ToolStripMenuItem("Exit", null, OnExitMenuItemClick)
+                {
+                    Text = "Exit",
+                });
+            enableMenuItem.CheckedChanged += OnEnableMenuItemCheckedChanged;
+            menu.ResumeLayout(false);
+            notifyIcon = new(components)
+            {
+                ContextMenuStrip = menu,
+                Text = "Insomnia",
+                Visible = true,
+            };
+            notifyIcon.MouseDoubleClick += OnNotifyIconDoubleClick;
 
             // Form.Icon getter returns a default icon from the WinForms assembly
             // when no icon is set. Use this as a placeholder for the tray for now.
             // TODO make a more unique icon.
-            offIcon = Icon ?? throw new Exception("Error: Missing WinForms default icon");
+            using (var dummy = new Form())
+            {
+                offIcon = dummy.Icon ?? throw new Exception("Error: Missing WinForms default icon");
+            }
             notifyIcon.Icon = onIcon = InvertIcon(offIcon);
 
             string[]? cfg = null;
@@ -60,8 +97,21 @@ namespace Insomnia
                     }
                 }
             }
-
             SystemEvents.SessionSwitch += OnSessionSwitch;
+            moveTimer.Enabled = true;
+        }
+
+        private bool disposed;
+
+        public void Dispose()
+        {
+            if (!Interlocked.Exchange(ref disposed, true))
+            {
+                SystemEvents.SessionSwitch -= OnSessionSwitch;
+                components?.Dispose();
+                onIcon?.Dispose();
+                GC.SuppressFinalize(this);
+            }
         }
 
         private static unsafe Icon InvertIcon(Icon icon)
@@ -169,15 +219,6 @@ namespace Insomnia
 
             static byte Round(double value)
                 => (byte)Math.Clamp((int)Math.Round(value), byte.MinValue, byte.MaxValue);
-        }
-
-        protected override void SetVisibleCore(bool value)
-        {
-            // After the form is constructed and loaded, Application.Run()
-            // will explicitly make the form visible, so it is not sufficient
-            // to call Hide() in the ctor or even in the form Load handler.
-            // By overriding this, we intercept any attempt to show the form.
-            base.SetVisibleCore(false);
         }
 
         private async void OnExitMenuItemClick(object? sender, EventArgs e)

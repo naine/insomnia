@@ -26,8 +26,8 @@ namespace Insomnia
 #endif
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            using var form = new MainForm();
-            Application.Run(form);
+            using var _ = new InsomniaApp();
+            Application.Run();
         }
     }
 }
