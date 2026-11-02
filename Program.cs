@@ -4,12 +4,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Windows.Forms;
-
-#if USE_NATIVE_AOT
-using System.Runtime.InteropServices;
-using WinFormsComInterop;
-#endif
+using Avalonia;
 
 [module: SkipLocalsInit]
 [assembly: DisableRuntimeMarshalling]
@@ -19,15 +14,10 @@ namespace Insomnia
     static class Program
     {
         [STAThread]
-        static void Main()
-        {
-#if USE_NATIVE_AOT
-            ComWrappers.RegisterForMarshalling(WinFormsComWrappers.Instance);
-#endif
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            using var _ = new InsomniaApp();
-            Application.Run();
-        }
+        static void Main(string[] args)
+            => AppBuilder.Configure<InsomniaApp>()
+            .UsePlatformDetect()
+            .LogToTrace()
+            .StartWithClassicDesktopLifetime(args);
     }
 }
