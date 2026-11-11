@@ -26,6 +26,8 @@ namespace Insomnia
 #endif
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Application.SetDefaultVisualStylesMode(VisualStylesMode.Latest);
+            Application.SetColorMode(SystemColorMode.System);
             using var _ = new InsomniaApp();
             Application.Run();
         }

@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net11.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <RollForward>Major</RollForward>
     <PublishRelease>true</PublishRelease>
     <Authors>Nathan Williams</Authors>
     <Copyright>Copyright © Nathan Williams 2020-2026</Copyright>
     <Description>Small application to prevent idle detection.</Description>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UseNativeAot)' != 'true'">
     <PublishReadyToRun>true</PublishReadyToRun>
